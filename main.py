@@ -1,87 +1,76 @@
-from tkinter import *
-from tkinter import font
-import csv 
+from tkinter import * 
 import pandas
 import random
-import time
+# from ask import Ask
+# bubble=Ask()
+BACKGROUND_COLOR = "#B1DDC6"
+current_card = {}
+to_learn = {}
+
+try:
+    data = pandas.read_csv("./flash_card/heart_breaker.csv")
+except FileNotFoundError:
+    original_data = pandas.read_csv("./flash_card/heart_breaker.csv")
+    print(original_data)
+    to_learn = original_data.to_dict(orient="records")
+else:
+    to_learn = data.to_dict(orient="records")
 
 
-def reloaded(yeah):
-    global duduna
-    # time.sleep(10)
-    canavs_one.itemconfig(cantilte, text="English", fill="black")
-    canavs_one.itemconfig(cardback,image=image_last)
-    canavs_one.itemconfig(canword, text=duduna[yeah], fill="black")
-    
-def next_card(yeah):
-    global duduna, anofi,yeayeayea
-   
-    yeayeayea=random.randint(0,len(anofi)-1)
-    pattern=anofi[yeayeayea]
-    jakes=duduna[yeayeayea]
-    window.after_cancel(flipcarder)
-    canavs_one.itemconfig(cantilte, text="አማርኛ", fill="black")
-    canavs_one.itemconfig(canword, text=anofi[yeah], fill="black")
+def next_card():
+    global current_card, flip_timer
+    window.after_cancel(flip_timer)
+    current_card = random.choice(to_learn)
+    canvas.itemconfig(card_title, text="አማርኛ", fill="black")
+    canvas.itemconfig(card_word, text=current_card["AMHARIC"], fill="black")
+    canvas.itemconfig(card_background, image=card_front_img)
+    flip_timer = window.after(3000, func=flip_card)
 
-    
-    # flipcarder=window.after(3000,func=reloaded(yeah))
-        # hio=csv.reader(file)
-def anglea_yu():
-    global duduna, anofi, yeayeayea
-    yeayeayea=random.randint(0,len(anofi)-1)
-    print(yeayeayea)
-    duduna.pop(yeayeayea)
-    anofi.pop(yeayeayea)
-    print(duduna[yeayeayea])
-    next_card(yeayeayea)
 
-window=Tk()
-window.title("Flash card")
-window.config(padx=20,pady=20,bg="#B1DDC6")
+def flip_card():
+    canvas.itemconfig(card_title, text="English", fill="white")
+    canvas.itemconfig(card_word, text=current_card["ENGLISH"], fill="white")
+    canvas.itemconfig(card_background, image=card_back_img)
 
-image_one=PhotoImage(file="./flash_card/card_front.png")
-image_last=PhotoImage(file="./flash_card/card_back.png")
-data=pandas.read_csv("./flash_card/heart_breaker.csv")
 
-anofi=data["AMHARIC"].tolist()
-duduna=data["ENGLISH"].tolist()
-baditch=data.to_dict()
+def is_known():
+    to_learn.remove(current_card)
+    print(len(to_learn))
+    data = pandas.DataFrame(to_learn)
+    data.to_csv("./flash_card/heart_breaker.csv", index=False)
+    next_card()
 
-    
-yeayeayea=random.randint(0,len(anofi)-1)
-pattern=anofi[yeayeayea] 
-    
-jakes=duduna[yeayeayea]
-# window.after(3000,reloaded)
+# bubble.youneverhadit()
 
-flipcarder=window.after(3000,func=next(yeayeayea))    
-      
-canavs_one=Canvas(width=800,height=520,bg="#B1DDC6",highlightthickness=0)
-# canavs_one.create_image(403,260,image=image_one)
-# title=canavs_one.create_text(400,100,font=("areil",22,"bold"),text="አማርኛ")
-# answer=canavs_one.create_text(400,260,font=("areil",32,"bold"),text=f"{pattern}")
-# next_card()
-canavs_one.grid(column=0,row=0,columnspan=3)
-# 
-# window.after(3000,reloaded(yeayeayea))
-cardback=canavs_one.create_image(403,260,image=image_one)
-cantilte=canavs_one.create_text(400,100,font=("areil",22,"bold"),text="አማርኛ")
-canword=canavs_one.create_text(400,260,font=("areil",32,"bold"),text="")
-image_two=PhotoImage(file="./flash_card/wrong.png")
-btton_one=Button(image=image_two,highlightthickness=0)
-    
-btton_one.grid(column=0,row=1)
-image_three=PhotoImage(file="./flash_card/right.png")
-btton_two=Button(image=image_three,highlightthickness=0,command=anglea_yu)
-btton_two.grid(column=2,row=1)
-next_card(yeayeayea)
+window = Tk()
+window.title("Flashy")
+window.config(padx=50, pady=50, bg=BACKGROUND_COLOR)
 
-# reloaded(yeayeayea)
-# reloaded()
-# while len(anofi)>0:
 
-#     yeayeayea=random.randint(0,len(anofi)-1)
-    
+
+
+flip_timer = window.after(3000, func=flip_card)
+
+canvas = Canvas(width=800, height=526)
+card_front_img = PhotoImage(file="./flash_card/card_front.png")
+card_back_img = PhotoImage(file="./flash_card/card_back.png")
+card_background = canvas.create_image(400, 263, image=card_front_img)
+card_title = canvas.create_text(400, 150, text="", font=("Ariel", 40, "italic"))
+card_word = canvas.create_text(400, 263, text="", font=("Ariel", 60, "bold"))
+canvas.config(bg=BACKGROUND_COLOR, highlightthickness=0)
+canvas.grid(row=0, column=0, columnspan=2)
+
+cross_image = PhotoImage(file="./flash_card/wrong.png")
+unknown_button = Button(image=cross_image, highlightthickness=0, command=next_card)
+unknown_button.grid(row=1, column=0)
+
+check_image = PhotoImage(file="./flash_card/right.png")
+known_button = Button(image=check_image, highlightthickness=0, command=is_known)
+known_button.grid(row=1, column=1)
+ 
+
+input_one=Entry(width=40)
+input_one.grid(column=3,row=3) 
+next_card()
 
 window.mainloop()
-
